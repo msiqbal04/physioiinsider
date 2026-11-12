@@ -1,0 +1,44 @@
+version: "3.8"
+services:
+  database:
+    image: mongo:7.0
+    container_name: physioiinsider_db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: physioiinsider
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: physioiinsider_api
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://database:27017/physioiinsider
+      NODE_ENV: production
+      JWT_SECRET: supersecretproductionkey_replace_in_env
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: physioiinsider_web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
